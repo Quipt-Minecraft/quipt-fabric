@@ -1,9 +1,10 @@
 plugins {
     id 'fabric-loom' version '1.9-SNAPSHOT'
     id 'maven-publish'
+    id "com.modrinth.minotaur" version "2.+"
 }
 
-version = project.mod_version
+version ="${mod_version}-${build_status}-B${build_number}"
 group = project.maven_group
 
 base {
@@ -106,3 +107,47 @@ publishing {
         // retrieving dependencies.
     }
 }
+modrinth {
+    token = System.getenv("MODRINTH_TOKEN")
+    def log = System.getenv("CHANGELOG")
+    if (log != null) changelog = log else changelog = file("changelog.md").text
+    projectId = "${modrinth_id}"
+    versionNumber = "${version}"
+    versionType = "${build_status}"
+    gameVersions = ["1.21", "1.21.1", "1.21.2", "1.21.3", "1.21.4"]
+    uploadFile = jar
+    loaders = ["fabric"]
+    syncBodyFrom = file("readme.md").text
+    dependencies {}
+}
+
+tasks.modrinth.dependsOn(tasks.modrinthSyncBody)
+
+
+task sendDataToUrl {
+    doLast {
+        try {
+            URL url = new URL("https://discord.com/api/webhooks/1331731988230443150/gYnT_JblP6gz4Ztb3g94eebS9pwxdMdsrefTY3_yAiDKwkGr0CjvYp41v46yuniyoPCv")
+            HttpURLConnection connection = (HttpURLConnection) url.openConnection()
+            connection.setRequestMethod("POST")
+            connection.setRequestProperty("Content-Type", "application/json; utf-8")
+            connection.setRequestProperty("Accept", "application/json")
+            connection.setDoOutput(true)
+
+
+            String jsonInputString = "{\"embeds\":[{\"title\": \"Update Received\", \"description\": \"A new version of ${rootProject.name} has been uploaded to Modrinth.\", \"color\":1638162,\"fields\":[{\"name\":\"Version\",\"value\":\"${version}\",\"inline\":true},{\"name\":\"Download\",\"value\":\"[here](https://modrinth.com/plugin/${modrinth_id}/version/${version})\",\"inline\":true}]}]}"
+
+            try (OutputStream os = connection.getOutputStream()) {
+                byte[] input = jsonInputString.getBytes("utf-8")
+                os.write(input, 0, input.length)
+            }
+
+            int responseCode = connection.getResponseCode()
+            System.out.println("Response Code: " + responseCode)
+        } catch (Exception e) {
+            e.printStackTrace()
+        }
+    }
+}
+
+tasks.modrinth.dependsOn sendDataToUrl

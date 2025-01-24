@@ -1,0 +1,1 @@
+Started adding fabric integration. Currently only Discord bot works
