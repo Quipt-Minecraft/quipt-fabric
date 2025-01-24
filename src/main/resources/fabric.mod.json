@@ -1,0 +1,29 @@
+{
+  "schemaVersion": 1,
+  "id": "quipt-fabric",
+  "version": "${version}",
+  "name": "quipt-fabric",
+  "description": "",
+  "authors": [],
+  "contact": {},
+  "license": "All-Rights-Reserved",
+  "icon": "assets/quipt-fabric/icon.png",
+  "environment": "server",
+  "entrypoints": {
+    "main": [
+      "me.quickscythe.quipt.Quipt"
+    ]
+  },
+  "mixins": [
+    "quipt-fabric.mixins.json",
+    {
+      "config": "quipt-fabric.client.mixins.json",
+      "environment": "client"
+    }
+  ],
+  "depends": {
+    "fabricloader": ">=${loader_version}",
+    "fabric": "*",
+    "minecraft": "${minecraft_version}"
+  }
+}
